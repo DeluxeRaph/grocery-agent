@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -26,25 +27,33 @@ class GroceryMessageHandler:
     def handle(self, event: BlueBubblesEvent) -> str:
         text = event.text.strip()
         command, value = _parse_chat_command(text)
-        agent = self.store.load()
 
         if command == "add" and value:
-            item = agent.add_request(value, requested_by=event.sender)
-            self.store.save(agent)
-            return f"Added {item.name} to the grocery list."
+
+            def add(agent):
+                item = agent.add_request(value, requested_by=event.sender)
+                return f"Added {item.name} to the grocery list."
+
+            return self.store.update(add)
 
         if command == "remove" and value:
-            removed = agent.remove_item(value)
-            self.store.save(agent)
-            return f"Removed {value.strip().lower()} from the grocery list." if removed else f"I couldn't find {value.strip().lower()} on the needed list."
+
+            def remove(agent):
+                removed = agent.remove_item(value)
+                return f"Removed {value.strip().lower()} from the grocery list." if removed else f"I couldn't find {value.strip().lower()} on the needed list."
+
+            return self.store.update(remove)
 
         if command == "confirm" and value:
-            confirmed = agent.confirm_item(value)
-            self.store.save(agent)
-            return f"Confirmed {value.strip().lower()} for the shared note." if confirmed else f"I couldn't find a needed item matching {value.strip().lower()}."
+
+            def confirm(agent):
+                confirmed = agent.confirm_item(value)
+                return f"Confirmed {value.strip().lower()} for the shared note." if confirmed else f"I couldn't find a needed item matching {value.strip().lower()}."
+
+            return self.store.update(confirm)
 
         if command == "list":
-            return agent.build_grocery_digest()
+            return self.store.load().build_grocery_digest()
 
         return _help_text()
 
@@ -67,21 +76,35 @@ def parse_bluebubbles_webhook(payload: Mapping[str, Any]) -> BlueBubblesEvent | 
         return None
 
     handle = message.get("handle") or data.get("handle") or {}
-    sender = handle.get("address") or message.get("address") or message.get("sender") or "unknown"
+    sender = _sender_from_handle(handle) or message.get("address") or message.get("sender") or "unknown"
     chat_id = data.get("chatGuid") or message.get("chatGuid") or payload.get("chatGuid") or "unknown"
     return BlueBubblesEvent(chat_id=str(chat_id), sender=str(sender), text=str(text))
 
 
+def _sender_from_handle(handle: object) -> str | None:
+    if isinstance(handle, Mapping):
+        address = handle.get("address")
+        return str(address) if address else None
+    if isinstance(handle, str):
+        return handle
+    return None
+
+
 def _parse_chat_command(text: str) -> tuple[str, str | None]:
-    lowered = text.strip().lower()
+    normalized = _strip_wake_word(text)
+    lowered = normalized.lower()
     for prefix, command in (("add ", "add"), ("remove ", "remove"), ("delete ", "remove"), ("confirm ", "confirm")):
         if lowered.startswith(prefix):
-            return command, text.strip()[len(prefix) :].strip()
+            return command, normalized[len(prefix) :].strip()
 
     if lowered in {"list", "grocery list", "what do we need?", "what do we need", "show list", "digest"}:
         return "list", None
 
     return "help", None
+
+
+def _strip_wake_word(text: str) -> str:
+    return re.sub(r"^@?(?:grocery|hermes)\b[\s:,-]*", "", text.strip(), count=1, flags=re.IGNORECASE).strip()
 
 
 def _help_text() -> str:
