@@ -14,16 +14,20 @@ Build a reusable, self-hostable grocery agent that starts with shared grocery li
   - normalization, categorization, digest, deal matching, confirmed-note export
 - `grocery_agent.storage`
   - JSON persistence for local-first state
-- `grocery_agent.cli`
-  - setup/add/remove/digest/deals/export-note commands
+- `grocery_agent.imessage`
+  - BlueBubbles webhook payload normalization
+  - iMessage-style chat commands (`add`, `remove`, `confirm`, `what do we need?`)
+  - grocery-specific message handling that can sit behind Hermes Gateway
 
 ## Adapter boundaries to add next
 
 ### Messaging adapters
 
+The preferred MVP transport is iMessage through Hermes Gateway + BlueBubbles. `grocery_agent.imessage` now contains the grocery-specific command handler; Hermes should continue to own BlueBubbles auth, webhook registration, session routing, delivery, and media handling.
+
 Target platforms:
 
-- iMessage through BlueBubbles
+- iMessage through BlueBubbles via Hermes Gateway
 - Telegram
 - Discord
 - WhatsApp/SMS

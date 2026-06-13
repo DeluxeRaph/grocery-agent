@@ -45,6 +45,12 @@ def run(argv: list[str] | None = None) -> int:
         print(f"Removed {args.name}" if removed else f"No needed item named {args.name}")
         return 0 if removed else 1
 
+    if args.command == "confirm":
+        confirmed = agent.confirm_item(args.item)
+        store.save(agent)
+        print(f"Confirmed {args.item}" if confirmed else f"No needed item matching {args.item}")
+        return 0 if confirmed else 1
+
     if args.command == "digest":
         print(agent.build_grocery_digest())
         return 0
@@ -90,6 +96,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
     remove = subparsers.add_parser("remove", help="Remove a needed item")
     remove.add_argument("name")
+
+    confirm = subparsers.add_parser("confirm", help="Confirm a needed item by id or name for shared-note export")
+    confirm.add_argument("item")
 
     subparsers.add_parser("digest", help="Print grocery digest")
 

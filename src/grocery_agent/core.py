@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
-from itertools import count
 from typing import Iterable, Mapping
 
 
@@ -13,8 +12,6 @@ _CATEGORY_KEYWORDS = {
     "bakery": {"bread", "bagels", "tortillas", "buns"},
     "pantry": {"rice", "beans", "pasta", "flour", "sugar", "cereal", "chips", "salsa"},
 }
-
-_ID_COUNTER = count(1)
 
 
 @dataclass(frozen=True)
@@ -52,9 +49,10 @@ class Deal:
 
 
 class GroceryAgent:
-    def __init__(self, config: HouseholdConfig):
+    def __init__(self, config: HouseholdConfig, next_item_number: int = 1):
         self.config = config
         self.items: list[GroceryItem] = []
+        self._next_item_number = next_item_number
 
     @classmethod
     def default_for(cls, area: str) -> "GroceryAgent":
@@ -71,7 +69,7 @@ class GroceryAgent:
     def add_request(self, text: str, requested_by: str) -> GroceryItem:
         quantity, name = _parse_request(text)
         item = GroceryItem(
-            id=f"item_{next(_ID_COUNTER)}",
+            id=self._next_item_id(),
             name=name,
             quantity=quantity,
             category=_categorize(name),
@@ -79,6 +77,11 @@ class GroceryAgent:
         )
         self.items.append(item)
         return item
+
+    def _next_item_id(self) -> str:
+        item_id = f"item_{self._next_item_number}"
+        self._next_item_number += 1
+        return item_id
 
     def remove_item(self, name: str) -> bool:
         target = _normalize_name(name)
@@ -88,9 +91,10 @@ class GroceryAgent:
                 return True
         return False
 
-    def confirm_item(self, item_id: str) -> bool:
+    def confirm_item(self, item_id_or_name: str) -> bool:
+        target = _normalize_name(item_id_or_name)
         for item in self.items:
-            if item.id == item_id and item.status == "needed":
+            if (item.id == item_id_or_name or item.name == target) and item.status == "needed":
                 item.status = "confirmed"
                 return True
         return False

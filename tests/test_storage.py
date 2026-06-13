@@ -44,6 +44,7 @@ def test_json_store_writes_portable_json_shape(tmp_path: Path):
     JsonStore(path).save(agent)
 
     data = json.loads(path.read_text())
-    assert sorted(data) == ["config", "items"]
+    assert sorted(data) == ["config", "items", "next_item_id"]
     assert data["config"]["area"] == "90210"
     assert data["items"][0]["name"] == "milk"
+    assert data["next_item_id"] == 2

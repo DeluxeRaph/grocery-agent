@@ -5,17 +5,17 @@ A self-hostable grocery and household coordination agent MVP for singles, couple
 The first milestone focuses on a practical grocery loop:
 
 - household setup with area/ZIP, travel radius, shopping days, favorite stores, budget mode, and dietary preferences
-- grocery requests from a chat/CLI-style interface
+- grocery requests from an iMessage group chat through Hermes + BlueBubbles
 - normalized grocery items with categories and requester tracking
 - daily deal matching against a deal feed/adapter input
 - shopping-day digest generation
 - confirmed-item export as markdown for a shared note/list backend
 
-Future modules will add iMessage/BlueBubbles, Apple Notes/Reminders sync, recipes, local activities, Instacart/cart integrations, and AgentCash-powered purchase experiments.
+Future modules will add Apple Notes/Reminders sync, recipes, local activities, Instacart/cart integrations, and AgentCash-powered purchase experiments.
 
 ## MVP status
 
-This repo currently ships a tested local CLI/core library. It is intentionally small so integrations can be added as adapters without locking users into a specific model provider, messaging platform, or list backend.
+This repo currently ships a tested core library, local CLI, and iMessage/BlueBubbles message handler. The CLI is mainly for setup, smoke tests, and local development; the household-facing chat experience should run through Hermes Gateway's BlueBubbles/iMessage support.
 
 ## Quick start
 
@@ -41,6 +41,16 @@ python -m grocery_agent.cli --state ./state.json add "eggs" --by Cloud
 python -m grocery_agent.cli --state ./state.json digest
 ```
 
+## iMessage group chat setup
+
+Hermes can already connect to iMessage through BlueBubbles. See `docs/imessage.md` for the live-chat path. The short version:
+
+1. Run BlueBubbles Server on an always-on Mac signed into Messages.app.
+2. Configure Hermes Gateway with `hermes gateway setup` and choose `BlueBubbles (iMessage)`.
+3. Set `BLUEBUBBLES_SERVER_URL` and `BLUEBUBBLES_PASSWORD` in `~/.hermes/.env` if configuring manually.
+4. Run `hermes gateway run` or install/start the gateway service.
+5. Use this project's `GroceryMessageHandler` as the grocery-specific handler for messages like `add eggs`, `remove bananas`, `confirm milk`, and `what do we need?`.
+
 ## Deal matching input
 
 For the MVP, deal sources are adapter-shaped JSON. Store scrapers/APIs can later produce this same shape.
@@ -65,9 +75,10 @@ python -m grocery_agent.cli --state ./state.json deals --deals-file ./deals.json
 
 ## Shared note export
 
-Confirmed grocery items can be exported as markdown:
+Confirmed grocery items can be exported as markdown. Confirm a needed item by id (for example `item_1`) or normalized name before exporting:
 
 ```bash
+python -m grocery_agent.cli --state ./state.json confirm "whole milk"
 python -m grocery_agent.cli --state ./state.json export-note
 ```
 
