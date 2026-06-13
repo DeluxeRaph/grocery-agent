@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from grocery_agent.apple_notes import AppleNotesSyncPlanner
 from grocery_agent.core import GroceryAgent, HouseholdConfig
 from grocery_agent.storage import JsonStore
 
@@ -25,6 +26,7 @@ def run(argv: list[str] | None = None) -> int:
                 favorite_stores=_csv(args.stores),
                 budget_mode=args.budget_mode,
                 dietary_preferences=_csv(args.dietary_preferences),
+                note_invitees=_csv(args.note_invitees),
             )
         )
         store.save(agent)
@@ -68,6 +70,20 @@ def run(argv: list[str] | None = None) -> int:
         print(agent.export_confirmed_note())
         return 0
 
+    if args.command == "apple-note-plan":
+        planner = AppleNotesSyncPlanner()
+        draft = planner.build_note_draft(agent)
+        plan = planner.build_invite_plan(draft)
+        print(draft.title)
+        print()
+        print(draft.body)
+        print()
+        print(plan.limitation)
+        print("Manual invite steps:")
+        for index, step in enumerate(plan.manual_steps, start=1):
+            print(f"{index}. {step}")
+        return 0
+
     parser.print_help()
     return 1
 
@@ -89,6 +105,7 @@ def _build_parser() -> argparse.ArgumentParser:
     setup.add_argument("--stores", default="")
     setup.add_argument("--budget-mode", default="balanced")
     setup.add_argument("--dietary-preferences", default="")
+    setup.add_argument("--note-invitees", default="", help="Comma-separated Apple Notes collaborators to invite")
 
     add = subparsers.add_parser("add", help="Add a grocery request")
     add.add_argument("text")
@@ -106,6 +123,7 @@ def _build_parser() -> argparse.ArgumentParser:
     deals.add_argument("--deals-file", required=True)
 
     subparsers.add_parser("export-note", help="Export confirmed items as shared-note markdown")
+    subparsers.add_parser("apple-note-plan", help="Print Apple Notes draft plus manual/automation invite handoff")
     return parser
 
 

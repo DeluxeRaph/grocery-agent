@@ -23,6 +23,7 @@ class HouseholdConfig:
     favorite_stores: list[str]
     budget_mode: str = "balanced"
     dietary_preferences: list[str] = field(default_factory=list)
+    note_invitees: list[str] = field(default_factory=list)
 
 
 @dataclass

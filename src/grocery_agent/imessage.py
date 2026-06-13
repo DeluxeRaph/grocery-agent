@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from grocery_agent.apple_notes import AppleNotesSyncPlanner
 from grocery_agent.storage import JsonStore
 
 
@@ -55,6 +56,14 @@ class GroceryMessageHandler:
         if command == "list":
             return self.store.load().build_grocery_digest()
 
+        if command == "apple_note":
+            agent = self.store.load()
+            planner = AppleNotesSyncPlanner()
+            draft = planner.build_note_draft(agent)
+            plan = planner.build_invite_plan(draft)
+            invite_line = ", ".join(draft.invitees) if draft.invitees else "No invitees configured yet"
+            return f"Apple Notes draft: {draft.title}\n{draft.body}\nInvitees: {invite_line}\nNext step: {plan.manual_steps[0]} Then use Share Note > Collaborate to invite them."
+
         return _help_text()
 
 
@@ -99,6 +108,9 @@ def _parse_chat_command(text: str) -> tuple[str, str | None]:
 
     if lowered in {"list", "grocery list", "what do we need?", "what do we need", "show list", "digest"}:
         return "list", None
+
+    if lowered in {"apple note", "apple notes", "share note", "shared note", "notes plan", "note invite", "invite people"}:
+        return "apple_note", None
 
     return "help", None
 

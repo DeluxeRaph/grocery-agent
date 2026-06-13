@@ -14,6 +14,10 @@ Build a reusable, self-hostable grocery agent that starts with shared grocery li
   - normalization, categorization, digest, deal matching, confirmed-note export
 - `grocery_agent.storage`
   - JSON persistence for local-first state
+- `grocery_agent.apple_notes`
+  - Apple Notes note draft generation from confirmed grocery items
+  - invite planning for configured collaborators
+  - stable Shortcuts/AppleScript handoff payload for future Mac/iOS automation
 - `grocery_agent.imessage`
   - BlueBubbles webhook payload normalization
   - iMessage-style chat commands (`add`, `remove`, `confirm`, `what do we need?`)
@@ -47,8 +51,8 @@ Target backends:
 
 - JSON/SQLite canonical local state
 - Markdown shared-note export
+- Apple Notes planner for manual invites and future Shortcuts/AppleScript automation
 - Apple Reminders/CalDAV if viable
-- Apple Notes through Shortcuts/macOS automation if viable
 - Notion/Google Sheets later
 
 ### Deal sources

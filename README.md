@@ -49,7 +49,7 @@ Hermes can already connect to iMessage through BlueBubbles. See `docs/imessage.m
 2. Configure Hermes Gateway with `hermes gateway setup` and choose `BlueBubbles (iMessage)`.
 3. Set `BLUEBUBBLES_SERVER_URL` and `BLUEBUBBLES_PASSWORD` in `~/.hermes/.env` if configuring manually.
 4. Run `hermes gateway run` or install/start the gateway service.
-5. Use this project's `GroceryMessageHandler` as the grocery-specific handler for messages like `add eggs`, `remove bananas`, `confirm milk`, and `what do we need?`.
+5. Use this project's `GroceryMessageHandler` as the grocery-specific handler for messages like `add eggs`, `remove bananas`, `confirm milk`, `what do we need?`, and `share note`.
 
 ## Deal matching input
 
@@ -82,7 +82,7 @@ python -m grocery_agent.cli --state ./state.json confirm "whole milk"
 python -m grocery_agent.cli --state ./state.json export-note
 ```
 
-Apple Notes has no simple public API, so the MVP treats markdown/JSON as the canonical source of truth. iPhone shared-list support should be implemented through an adapter after evaluating Apple Reminders, Shortcuts, macOS automation, and BlueBubbles helper approaches.
+Apple Notes has no simple public API, so the MVP treats markdown/JSON as the canonical source of truth. The repo now includes an Apple Notes planner for generating a shared-note draft, configured invitee list, manual invite steps, and a stable Shortcuts/AppleScript handoff payload. See `docs/apple-notes.md`.
 
 ## Design principles
 
